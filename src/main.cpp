@@ -36,9 +36,14 @@ public:
 
 Object GetObject(int i)
 {
-    std::cout << "GetObject() called" << std::endl;
-    Object o; o.poop = i;
-    return o;
+    return Object();
+}
+
+void PrintObject(Object o)
+{
+    std::cout << "Object::boob: " << o.boob << std::endl;
+    std::cout << "Object::poop: " << o.poop << std::endl;
+    std::cout << "Object::msg: " << o.msg << std::endl;
 }
 
 void Print(std::string msg)
@@ -64,6 +69,7 @@ int main()
     lua.BindFunction(&Foo3, "Foo3");
     lua.BindFunction(&Print, "Print");
     lua.BindFunction(&GetObject, "GetObject");
+    lua.BindFunction(&PrintObject, "PrintObject");
     
     lua.DoFile("script.lua");
     
