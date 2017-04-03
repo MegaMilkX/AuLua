@@ -399,11 +399,201 @@ void _luaCallR(void (*fn)(void), LuaVal& ret, std::vector<LuaVal>& args)
         args[10].Get<Arg10>()
     );
 }
+/*
+inline std::vector<LuaVal> _createArgListFn()
+{ return std::vector<LuaVal>(); }
+template<typename Arg0>
+std::vector<LuaVal> _createArgListFn()
+{ return { LuaVal(Arg0()) } }
+template<typename Arg0, 
+    typename Arg1>
+std::vector<LuaVal> _createArgListFn()
+{
+    return { 
+        LuaVal(Arg0()), 
+        LuaVal(Arg1()) 
+    } 
+}
+template<typename Arg0,
+    typename Arg1,
+    typename Arg2>
+std::vector<LuaVal> _createArgListFn()
+{
+    return { 
+        LuaVal(Arg0()), 
+        LuaVal(Arg1()), 
+        LuaVal(Arg2()) 
+    } 
+}
+template<typename Arg0,
+    typename Arg1,
+    typename Arg2,
+    typename Arg3>
+std::vector<LuaVal> _createArgListFn()
+{
+    return { 
+        LuaVal(Arg0()), 
+        LuaVal(Arg1()), 
+        LuaVal(Arg2()), 
+        LuaVal(Arg3()) 
+    } 
+}
+template<typename Arg0,
+    typename Arg1,
+    typename Arg2,
+    typename Arg3,
+    typename Arg4>
+std::vector<LuaVal> _createArgListFn()
+{
+    return { 
+        LuaVal(Arg0()), 
+        LuaVal(Arg1()), 
+        LuaVal(Arg2()), 
+        LuaVal(Arg3()), 
+        LuaVal(Arg4()) 
+    } 
+}
+template<typename Arg0,
+    typename Arg1,
+    typename Arg2,
+    typename Arg3,
+    typename Arg4,
+    typename Arg5>
+std::vector<LuaVal> _createArgListFn()
+{
+    return { 
+        LuaVal(Arg0()), 
+        LuaVal(Arg1()), 
+        LuaVal(Arg2()), 
+        LuaVal(Arg3()), 
+        LuaVal(Arg4()), 
+        LuaVal(Arg5()) 
+    } 
+}
+template<typename Arg0,
+    typename Arg1,
+    typename Arg2,
+    typename Arg3,
+    typename Arg4,
+    typename Arg5,
+    typename Arg6>
+std::vector<LuaVal> _createArgListFn()
+{
+    return { 
+        LuaVal(Arg0()), 
+        LuaVal(Arg1()), 
+        LuaVal(Arg2()), 
+        LuaVal(Arg3()), 
+        LuaVal(Arg4()), 
+        LuaVal(Arg5()), 
+        LuaVal(Arg6()) 
+    } 
+}
+template<typename Arg0,
+    typename Arg1,
+    typename Arg2,
+    typename Arg3,
+    typename Arg4,
+    typename Arg5,
+    typename Arg6,
+    typename Arg7>
+std::vector<LuaVal> _createArgListFn()
+{
+    return { 
+        LuaVal(Arg0()), 
+        LuaVal(Arg1()), 
+        LuaVal(Arg2()), 
+        LuaVal(Arg3()), 
+        LuaVal(Arg4()), 
+        LuaVal(Arg5()), 
+        LuaVal(Arg6()), 
+        LuaVal(Arg7()) 
+    } 
+}
+template<typename Arg0,
+    typename Arg1,
+    typename Arg2,
+    typename Arg3,
+    typename Arg4,
+    typename Arg5,
+    typename Arg6,
+    typename Arg7,
+    typename Arg8>
+std::vector<LuaVal> _createArgListFn()
+{
+    return { 
+        LuaVal(Arg0()), 
+        LuaVal(Arg1()), 
+        LuaVal(Arg2()), 
+        LuaVal(Arg3()), 
+        LuaVal(Arg4()), 
+        LuaVal(Arg5()), 
+        LuaVal(Arg6()), 
+        LuaVal(Arg7()), 
+        LuaVal(Arg8()) 
+    } 
+}
+template<typename Arg0,
+    typename Arg1,
+    typename Arg2,
+    typename Arg3,
+    typename Arg4,
+    typename Arg5,
+    typename Arg6,
+    typename Arg7,
+    typename Arg8,
+    typename Arg9>
+std::vector<LuaVal> _createArgListFn()
+{
+    return { 
+        LuaVal(Arg0()), 
+        LuaVal(Arg1()), 
+        LuaVal(Arg2()), 
+        LuaVal(Arg3()), 
+        LuaVal(Arg4()), 
+        LuaVal(Arg5()), 
+        LuaVal(Arg6()), 
+        LuaVal(Arg7()), 
+        LuaVal(Arg8()), 
+        LuaVal(Arg9()) 
+    } 
+}
+template<typename Arg0,
+    typename Arg1,
+    typename Arg2,
+    typename Arg3,
+    typename Arg4,
+    typename Arg5,
+    typename Arg6,
+    typename Arg7,
+    typename Arg8,
+    typename Arg9,
+    typename Arg10>
+std::vector<LuaVal> _createArgListFn()
+{
+    return { 
+        LuaVal(Arg0()), 
+        LuaVal(Arg1()), 
+        LuaVal(Arg2()), 
+        LuaVal(Arg3()), 
+        LuaVal(Arg4()), 
+        LuaVal(Arg5()), 
+        LuaVal(Arg6()), 
+        LuaVal(Arg7()), 
+        LuaVal(Arg8()), 
+        LuaVal(Arg9()), 
+        LuaVal(Arg10()) 
+    } 
+}
+*/
+
+template<typename T> using identity_t = T; // VS2013 hack
 
 template<typename... Args>
 std::vector<LuaVal> _createArgListFn()
 {
-    std::vector<LuaVal> v = {LuaVal(Args())...};
+    std::vector<LuaVal> v = {LuaVal(identity_t<Args>())...};
+    v.erase(v.begin());
     return v;
 }
 
@@ -424,7 +614,7 @@ public:
         _fn = (void (*)(void))fn;
         _callFn = &_luaCallNR<Args...>;
         _argCount = sizeof...(Args);
-        _createArgList = _createArgListFn<Args...>;
+        _createArgList = &_createArgListFn<int, Args...>;
     }
     template<typename Ret, typename... Args>
     LuaFunc(Ret (*fn)(Args... args))
@@ -432,7 +622,7 @@ public:
         _fn = (void (*)(void))fn;
         _callFn = &_luaCallR<Ret, Args...>;
         _argCount = sizeof...(Args);
-        _createArgList = _createArgListFn<Args...>;
+        _createArgList = &_createArgListFn<int, Args...>;
     }
 private:
     std::vector<LuaVal> (*_createArgList)();
