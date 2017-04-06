@@ -50,27 +50,9 @@ void Print(std::string msg)
 {
     std::cout << msg << std::endl;
 }
-
-template<typename FuncType, FuncType Func, typename Class>
-void Call(void* this_)
-{
-    (((Class*)this_)->*Func)();
-}
-
-template<typename FuncType, FuncType Func>
-void Call0()
-{
-    (*Func)();
-}
-
-void bar(){std::cout << "bar" << std::endl;}
    
 int main()
-{
-    Object o;
-    Call<void(Object::*)(), &Object::Beep, Object>(&o);
-    //Call0<void(*)(), &bar>();
-    
+{    
     Au::Lua lua;
     lua.Init();
     
