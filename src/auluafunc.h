@@ -588,7 +588,6 @@ std::vector<LuaVal> _createArgListFn()
 */
 
 template<typename T> using identity_t = T; // VS2013 hack
-
 template<typename... Args>
 std::vector<LuaVal> _createArgListFn()
 {
