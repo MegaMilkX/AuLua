@@ -123,6 +123,10 @@ struct LuaType
         return type;
     }
     
+    template<typename T>
+    static LuaType* GetPtr()
+    { return &(Get<T>()); }
+    
     template<typename Type, typename Class>
     LuaType& Member(Type Class::* member, const std::string& name)
     {
