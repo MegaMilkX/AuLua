@@ -119,13 +119,8 @@ struct LuaType
     template<typename T>
     static LuaType& Get()
     {
-        std::map<int, LuaType>::iterator it =
-            _types.find(LuaTypeIndex<T>());
-        LuaType type = LuaType((T*)0);
-        if(it == _types.end())
-            _types[type._typeIndex] = type;
-
-        return _types[type._typeIndex];
+        static LuaType type = LuaType((T*)0);
+        return type;
     }
     
     template<typename Type, typename Class>
@@ -192,7 +187,6 @@ struct LuaType
 private:
     void (*_push)(lua_State*, void*);
     void (*_pop)(lua_State*, void*);
-    static std::map<int, LuaType> _types;
 };
 
 }
