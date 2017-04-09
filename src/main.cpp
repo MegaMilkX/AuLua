@@ -4,23 +4,6 @@
 
 #include "aulua.h"
 
-int Foo()
-{
-    std::cout << "Foo" << std::endl;
-    return 0;
-}
-
-int Foo2(int i)
-{
-    std::cout << "Foo2: " << i << std::endl;
-    return 0;
-}
-
-void Foo3(std::string c, float x, double y, int z)
-{
-    std::cout << c << ": " << x << " " << y << " " << z <<std::endl;
-}
-
 class Object
 {
 public:
@@ -34,21 +17,19 @@ public:
     std::string msg;
 };
 
-Object GetObject(int i)
+Object GetObject()
 {
     return Object();
 }
 
-void PrintObject(Object o)
+void Print(const std::string& msg)
 {
-    std::cout << "Object::boob: " << o.boob << std::endl;
-    std::cout << "Object::poop: " << o.poop << std::endl;
-    std::cout << "Object::msg: " << o.msg << std::endl;
+    std::cout << ">: " << msg << std::endl;
 }
 
-void Print(std::string msg)
+void Print(int i)
 {
-    std::cout << msg << std::endl;
+    std::cout << ">: " << i << std::endl;
 }
    
 int main()
@@ -56,20 +37,14 @@ int main()
     Au::Lua lua;
     lua.Init();
     
-    lua.BindType<Object>()
-        .Member(&Object::boob, "boob")
-        .Member(&Object::poop, "poop")
-        .Member(&Object::msg, "msg")
-        .Function(&Object::Beep, "Beep")
-        .Function(&Object::Bop, "Bop");
-    lua.SetGlobal(Object(), "Object");
+    lua.Bind(&Object::boob, "boob");
+    lua.Bind(&Object::poop, "poop");
+    lua.Bind(&Object::msg, "msg");
+    lua.Bind(&Object::Beep, "Beep");
+    lua.Bind(&Object::Bop, "Bop");
     
-    lua.BindFunction(&Foo2, "Foo2");
-    lua.BindFunction(&Foo, "Foo");
-    lua.BindFunction(&Foo3, "Foo3");
-    lua.BindFunction(&Print, "Print");
-    lua.BindFunction(&GetObject, "GetObject");
-    lua.BindFunction(&PrintObject, "PrintObject");
+    lua.Bind(&GetObject, "GetObject");
+    lua.Bind<void, const std::string&>(&Print, "Print");
     
     lua.DoFile("script.lua");
     
