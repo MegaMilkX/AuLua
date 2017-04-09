@@ -15,6 +15,11 @@ extern "C" {
 
 namespace Au{
     
+template<typename T> struct bare_type { typedef T type; };
+template<typename T> struct bare_type<const T> : bare_type<T> {};
+template<typename T> struct bare_type<T&> : bare_type<T> {};
+template<typename T> struct bare_type<T&&> : bare_type<T> {};
+    
 template<typename T>
 static int LuaTypeIndex()
 {
@@ -94,27 +99,45 @@ template<>
 inline void _popFn<bool>(lua_State* L, void* data) { (*(bool*)data) = lua_toboolean(L, -1) != 0; lua_pop(L, 1); }
 
 struct LuaType
-{
+{    
+    struct MemberField
+    {
+        MemberField()
+        : type(0), offset(0) {}
+        MemberField(LuaType* type, char* offset, const std::string& name)
+        : type(type), offset(offset), name(name) {}
+        LuaType* type;
+        char* offset;
+        std::string name;
+    };
+    
+    struct MemberFunc
+    {
+        MemberFunc()
+        : statePtr(0), fnIndex(0) {}
+        MemberFunc(const std::string& name, void* statePtr, int fnIndex, int (*cfn)(lua_State*))
+        : name(name), statePtr(statePtr), fnIndex(fnIndex), cfn(cfn) {}
+        std::string name;
+        void* statePtr;
+        int fnIndex;
+        int (*cfn)(lua_State*);
+    };
+
     LuaType()
     : _typeIndex(0),
-      memberOffset(0),
       _push(0),
       _pop(0)
     {}
     template<typename T>
     LuaType(T* dummy)
     : _typeIndex(LuaTypeIndex<T>()),
-      memberOffset(0),
       _push(&_pushFn<T>),
       _pop(&_popFn<T>)
     {}
     
     int _typeIndex;
-    std::vector<LuaType> members;
-    //std::vector<LuaFunc> functions;
-    
-    std::string memberName;
-    char* memberOffset;
+    std::vector<MemberField> members;
+    std::vector<MemberFunc> functions;
     
     template<typename T>
     static LuaType& Get()
@@ -132,12 +155,18 @@ struct LuaType
     {
         if(LuaTypeIndex<Class>() != _typeIndex)
             return *this;
-        LuaType m = LuaType::Get<Type>();
-        m.memberName = name;
+        MemberField m;
+        m.type = LuaType::GetPtr<Type>();
         Class* c = 0;
-        m.memberOffset = (char*)((char*)&(c->*member) - (char*)c);
+        m.offset = (char*)((char*)&(c->*member) - (char*)c);
+        m.name = name;
         members.push_back(m);
         return *this;
+    }
+    
+    void Function(const MemberFunc& func)
+    {
+        functions.push_back(func);
     }
     
     template<typename Class, typename Ret, typename... Args>
@@ -161,10 +190,21 @@ struct LuaType
         else
         {
             lua_createtable(L, 0, 0);
+            lua_pushlightuserdata(L, data);
+            lua_setfield(L, -2, "this");
+            
             for(unsigned i = 0; i < members.size(); ++i)
             {
-                members[i].LuaPush(L, (void*)((char*)data + (int)members[i].memberOffset));
-                lua_setfield(L, -2, members[i].memberName.c_str());
+                members[i].type->LuaPush(L, (void*)((char*)data + (int)members[i].offset));
+                lua_setfield(L, -2, members[i].name.c_str());
+            }
+            
+            for(unsigned i = 0; i < functions.size(); ++i)
+            {
+                lua_pushnumber(L, functions[i].fnIndex);
+                lua_pushlightuserdata(L, functions[i].statePtr);
+                lua_pushcclosure(L, functions[i].cfn, 2);
+                lua_setfield(L, -2, functions[i].name.c_str());
             }
         }
     }
@@ -182,9 +222,9 @@ struct LuaType
         {
             for(unsigned i = 0; i < members.size(); ++i)
             {
-                lua_pushstring(L, members[i].memberName.c_str());
+                lua_pushstring(L, members[i].name.c_str());
                 lua_gettable(L, -2);
-                members[i].LuaPop(L, (void*)((char*)data + (int)members[i].memberOffset));
+                members[i].type->LuaPop(L, (void*)((char*)data + (int)members[i].offset));
             }
         }
     }
