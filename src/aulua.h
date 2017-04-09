@@ -71,10 +71,26 @@ public:
     LuaFunc& GetFunction(unsigned id)
     { return _funcs[id]; }
     template<typename Ret, typename... Args>
-    void BindFunction(Ret (*fn)(Args... args), const std::string& name)
+    void Bind(Ret (*fn)(Args... args), const std::string& name)
     {
         LuaFunc func = LuaFunc(fn);
         _luaBindFunc(_funcs.size(), name);
+        _funcs.push_back(func);
+    }
+    
+    template<typename Type, typename Class>
+    void Bind(Type Class::* member, const std::string& name)
+    {
+        LuaType* t = LuaType::GetPtr<Class>();
+        t->Member(member, name);
+    }
+    
+    template<typename Class, typename Ret, typename... Args>
+    void Bind(Ret (Class::*fn)(Args... args), const std::string& name)
+    {
+        LuaType* t = LuaType::GetPtr<Class>();
+        LuaFunc func = LuaFunc(fn);
+        t->Function(LuaType::MemberFunc(name, this, _funcs.size(), &_luaProc));
         _funcs.push_back(func);
     }
     
