@@ -88,12 +88,14 @@ public:
     }
     
     template<typename T>
-    T Get()
+    typename bare_type<T>::type Get()
     {
-        if(_type._typeIndex != LuaTypeIndex<T>())
-            return T();
+        if(_type._typeIndex != LuaTypeIndex<bare_type<T>::type>())
+        {
+            return bare_type<T>::type();
+        }
         
-        return *(T*)_data;
+        return *(bare_type<T>::type*)_data;
     }
     
     void Print()

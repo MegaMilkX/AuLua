@@ -6,10 +6,11 @@
 namespace Au{
 
 template<typename T> using identity_t = T; // VS2013 hack
+
 template<typename... Args>
 std::vector<LuaVal> _createArgListFn()
 {
-    std::vector<LuaVal> v = {LuaVal(identity_t<Args>())...};
+    std::vector<LuaVal> v = {LuaVal(bare_type<Args>::type())...};
     v.erase(v.begin());
     return v;
 }
@@ -32,9 +33,9 @@ public:
     {
         static std::vector<Ret(Class::*)(Args...)> functions;
         static Ret CallNR(int idx, void* this_, Args... args)
-        { ((Class*)this_)::->*functions[idx](args...); }
+        { (((Class*)this_)->*functions[idx])(args...); }
         static Ret CallR(int idx, void* this_, Args... args)
-        { return ((Class*)this_)::->*functions[idx](args...); }
+        { return (((Class*)this_)->*functions[idx])(args...); }
     };
 
     template<typename Ret, typename... Args>
@@ -42,6 +43,14 @@ public:
     {
         int idx = Storage<Ret, Args...>::functions.size();
         Storage<Ret, Args...>::functions.push_back(fn);
+        return idx;
+    }
+    
+    template<typename Class, typename Ret, typename... Args>
+    static int Store(Ret(Class::*fn)(Args...))
+    {
+        int idx = MStorage<Class, Ret, Args...>::functions.size();
+        MStorage<Class, Ret, Args...>::functions.push_back(fn);
         return idx;
     }
     
@@ -334,6 +343,8 @@ public:
 };
 template<typename Ret, typename... Args>
 std::vector<Ret(*)(Args...)> LuaFuncStore::Storage<Ret, Args...>::functions;
+template<typename Class, typename Ret, typename... Args>
+std::vector<Ret(Class::*)(Args...)> LuaFuncStore::MStorage<Class, Ret, Args...>::functions;
 
 class LuaFunc
 {
@@ -342,7 +353,7 @@ public:
     { (*_callFn)(_fnIndex, ret, args); }
     
     void operator()(void* this_, LuaVal& ret, std::vector<LuaVal>& args)
-    { (*_callMFn)(_fnIndex, this_, ret, args); }
+    { (*_callMFn)(_mfnIndex, this_, ret, args); }
 
     int ArgCount() { return _argCount; }
     std::vector<LuaVal> Args() { return _createArgList(); }
