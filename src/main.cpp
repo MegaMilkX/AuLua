@@ -74,10 +74,7 @@ int main()
     lua.DoFile("script.lua");
     
     lua.Call("Init");
-    while(true)
-    {
-        lua.Call("Update");
-    }
+    lua.Call("Update", 1.3f);
     
     lua.Cleanup();
     std::getchar();
