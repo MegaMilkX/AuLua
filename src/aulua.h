@@ -1,6 +1,8 @@
 #ifndef AU_LUA_H
 #define AU_LUA_H
 
+#include <fstream>
+#include <streambuf>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -39,12 +41,45 @@ public:
         
     }
     
+    bool LoadSource(const std::string& source)
+    {
+        int ret;
+        ret = luaL_loadbuffer(
+            L, 
+            source.c_str(), 
+            source.size(), 
+            "script"
+        );
+        if(ret != 0)
+        {
+            
+            return false;
+        }
+        
+        lua_pcall(L, 0, 0, 0);
+        
+        return true;
+    }
+    
     void DoFile(const std::string& filename)
     {
-        luaL_dofile(L, filename.c_str());
+        std::ifstream file(filename);
+        std::string source((std::istreambuf_iterator<char>(file)),
+                 std::istreambuf_iterator<char>());
+                 
+        LoadSource(source);
+        
         const char* err = lua_tostring(L, -1);
         if(err)
             std::cout << err << std::endl;
+        
+        file.close();
+    }
+    
+    void Call(const std::string& funcName)
+    {
+        lua_getglobal(L, funcName.c_str());
+        lua_pcall(L, 0, 0, 0);
     }
     
     // Type shenanigans ==================
@@ -112,6 +147,17 @@ private:
     
     std::vector<LuaFunc> _funcs;
 };
+
+inline int _luaProc(lua_State* L)
+{
+    Lua* lua = (Lua*)lua_touserdata(L, lua_upvalueindex(2));
+    LuaFunc func = lua->GetFunction((int)lua_tonumber(L, lua_upvalueindex(1)));
+
+    if(!func.GrabArgs(L))
+        return 0;
+    
+    return func.Call(L);
+}
 
 }
 
