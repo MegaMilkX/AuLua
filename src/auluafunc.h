@@ -7,10 +7,11 @@ namespace Au{
 
 template<typename T> using identity_t = T; // VS2013 hack
 
-template<typename dummy_vs2013_hack, typename... Args>
+template<typename... Args>
 std::vector<LuaType*> _createArgTypeList()
 {
     std::vector<LuaType*> v = { LuaType::GetPtr<Args>()... };
+    v.erase(v.begin());
     return v;
 }
 
