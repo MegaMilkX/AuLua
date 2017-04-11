@@ -1,10 +1,12 @@
-Foo3("Move", 12, 1.3, 3.7);
 
-o = GetObject(1);
-o.poop = 13;
-o.msg = "Hello!";
-o.boob = 12.3;
-PrintObject(o);
+Init = function()
+    o = GetObject();
+    o:Beep();
+    o:Bop();
+    o:SetMsg("Initialized");
+end
 
-Print("Beepin' n' Boppin'");
-Print("That was really dumb")
+Update = function(data)
+    Print(data);
+    PrintObject(o);
+end
