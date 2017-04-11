@@ -321,7 +321,7 @@ struct LuaType
         
         lua_setfield(L, -2, "__index");
         
-        _pushDeleter(L);
+        if(_pushDeleter) _pushDeleter(L);
         
         lua_setmetatable(L, -2);
     }
