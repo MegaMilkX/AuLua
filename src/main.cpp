@@ -15,11 +15,22 @@ public:
     int boob = 420;
     int poop;
     std::string msg;
+    
+    char a[400];
 };
 
+Object object;
 Object GetObject()
 {
-    return Object();
+    return object;
+}
+
+void PrintObject(Object* o)
+{
+    std::cout << "[Object]: " << o << std::endl;
+    std::cout << "boob: " << o->boob;
+    std::cout << "poop: " << o->poop;
+    std::cout << "msg: " << o->msg;
 }
 
 void Print(const std::string& msg)
@@ -30,6 +41,11 @@ void Print(const std::string& msg)
 void Print(int i)
 {
     std::cout << ">: " << i << std::endl;
+}
+
+void Nothing()
+{
+    std::cout << "Nothing" << std::endl;
 }
    
 int main()
@@ -43,9 +59,13 @@ int main()
     lua.Bind(&Object::Beep, "Beep");
     lua.Bind(&Object::Bop, "Bop");
     
-    lua.Bind(&GetObject, "GetObject");
-    lua.Bind<void, const std::string&>(&Print, "Print");
+    lua.Bind(&Nothing, "Nothing");
     
+    lua.Bind(&GetObject, "GetObject");
+    lua.Bind(&PrintObject, "PrintObject");
+    lua.Bind<void, const std::string&>(&Print, "Print");
+    lua.Bind<void, int>(&Print, "Printi");
+
     lua.DoFile("script.lua");
     
     lua.Cleanup();

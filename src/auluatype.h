@@ -13,12 +13,9 @@ extern "C" {
 #include "ext/lua-5.1.5/src/lauxlib.h"
 }
 
+#include "auluavalue.h"
+
 namespace Au{
-    
-template<typename T> struct bare_type { typedef T type; };
-template<typename T> struct bare_type<const T> : bare_type<T> {};
-template<typename T> struct bare_type<T&> : bare_type<T> {};
-template<typename T> struct bare_type<T&&> : bare_type<T> {};
     
 template<typename T>
 static int LuaTypeIndex()
@@ -33,70 +30,184 @@ static int NextLuaTypeIndex()
 }
 
 template<typename T> 
-inline void _pushFn(lua_State* L, void* data) { lua_pushnil(L); }
+inline void _pushFn(lua_State* L, void* data) 
+{
+    void** userDataPtr = (void**)lua_newuserdata(L, sizeof(void*));
+    (*userDataPtr) = data;
+}
 template<> 
-inline void _pushFn<char>(lua_State* L, void* data) { lua_pushnumber(L, (lua_Number)*(char*)data); }
+inline void _pushFn<char>(lua_State* L, void* data) 
+{ lua_pushnumber(L, (lua_Number)*(char*)data); }
 template<> 
-inline void _pushFn<unsigned char>(lua_State* L, void* data) { lua_pushnumber(L, (lua_Number)*(unsigned char*)data); }
+inline void _pushFn<unsigned char>(lua_State* L, void* data) 
+{ lua_pushnumber(L, (lua_Number)*(unsigned char*)data); }
 template<> 
-inline void _pushFn<short>(lua_State* L, void* data) { lua_pushnumber(L, (lua_Number)*(short*)data); }
+inline void _pushFn<short>(lua_State* L, void* data) 
+{ lua_pushnumber(L, (lua_Number)*(short*)data); }
 template<> 
-inline void _pushFn<unsigned short>(lua_State* L, void* data) { lua_pushnumber(L, (lua_Number)*(unsigned short*)data); }
+inline void _pushFn<unsigned short>(lua_State* L, void* data) 
+{ lua_pushnumber(L, (lua_Number)*(unsigned short*)data); }
 template<> 
-inline void _pushFn<int>(lua_State* L, void* data) { lua_pushnumber(L, (lua_Number)*(int*)data); }
+inline void _pushFn<int>(lua_State* L, void* data) 
+{ lua_pushnumber(L, (lua_Number)*(int*)data); }
 template<> 
-inline void _pushFn<unsigned int>(lua_State* L, void* data) { lua_pushnumber(L, (lua_Number)*(unsigned int*)data); }
+inline void _pushFn<unsigned int>(lua_State* L, void* data) 
+{ lua_pushnumber(L, (lua_Number)*(unsigned int*)data); }
 template<> 
-inline void _pushFn<long>(lua_State* L, void* data) { lua_pushnumber(L, (lua_Number)*(long*)data); }
+inline void _pushFn<long>(lua_State* L, void* data) 
+{ lua_pushnumber(L, (lua_Number)*(long*)data); }
 template<> 
-inline void _pushFn<unsigned long>(lua_State* L, void* data) { lua_pushnumber(L, (lua_Number)*(unsigned long*)data); }
+inline void _pushFn<unsigned long>(lua_State* L, void* data) 
+{ lua_pushnumber(L, (lua_Number)*(unsigned long*)data); }
 template<> 
-inline void _pushFn<long long>(lua_State* L, void* data) { lua_pushnumber(L, (lua_Number)*(long long*)data); }
+inline void _pushFn<long long>(lua_State* L, void* data) 
+{ lua_pushnumber(L, (lua_Number)*(long long*)data); }
 template<> 
-inline void _pushFn<unsigned long long>(lua_State* L, void* data) { lua_pushnumber(L, (lua_Number)*(unsigned long long*)data); }
+inline void _pushFn<unsigned long long>(lua_State* L, void* data) 
+{ lua_pushnumber(L, (lua_Number)*(unsigned long long*)data); }
 template<> 
-inline void _pushFn<float>(lua_State* L, void* data) { lua_pushnumber(L, *(float*)data); }
+inline void _pushFn<float>(lua_State* L, void* data) 
+{ lua_pushnumber(L, *(float*)data); }
 template<> 
-inline void _pushFn<double>(lua_State* L, void* data) { lua_pushnumber(L, *(double*)data); }
+inline void _pushFn<double>(lua_State* L, void* data) 
+{ lua_pushnumber(L, *(double*)data); }
 template<> 
-inline void _pushFn<char*>(lua_State* L, void* data) { lua_pushstring(L, *(char**)data); }
+inline void _pushFn<char*>(lua_State* L, void* data) 
+{ lua_pushstring(L, (char*)data); }
 template<> 
-inline void _pushFn<std::string>(lua_State* L, void* data) { lua_pushstring(L, (*(std::string*)data).c_str()); }
+inline void _pushFn<std::string>(lua_State* L, void* data) 
+{ lua_pushstring(L, (*(std::string*)data).c_str()); }
 template<> 
-inline void _pushFn<bool>(lua_State* L, void* data) { lua_pushboolean(L, (int)*(bool*)data); }
+inline void _pushFn<bool>(lua_State* L, void* data) 
+{ lua_pushboolean(L, (int)*(bool*)data); }
 
 template<typename T>
-inline void _popFn(lua_State* L, void* data) { lua_pop(L, 1); }
+inline void _popFn(lua_State* L, LuaValue& data) 
+{ 
+    void** userDataPtr = (void**)lua_touserdata(L, -1);
+    data = *userDataPtr;
+    lua_pop(L, 1); 
+}
 template<>
-inline void _popFn<char>(lua_State* L, void* data) { (*(char*)data) = (char)lua_tonumber(L, -1); lua_pop(L, 1); }
+inline void _popFn<char>(lua_State* L, LuaValue& data) 
+{
+    char v = (char)lua_tonumber(L, -1); 
+    data = v; 
+    lua_pop(L, 1); 
+}
 template<>
-inline void _popFn<unsigned char>(lua_State* L, void* data) { (*(unsigned char*)data) = (unsigned char)lua_tonumber(L, -1); lua_pop(L, 1); }
+inline void _popFn<unsigned char>(lua_State* L, LuaValue& data) 
+{
+    unsigned char v = (unsigned char)lua_tonumber(L, -1); 
+    data = v;
+    lua_pop(L, 1); 
+}
 template<>
-inline void _popFn<short>(lua_State* L, void* data) { (*(short*)data) = (short)lua_tonumber(L, -1); lua_pop(L, 1); }
+inline void _popFn<short>(lua_State* L, LuaValue& data) 
+{
+    short v = (short)lua_tonumber(L, -1); 
+    data = v;
+    lua_pop(L, 1); 
+}
 template<>
-inline void _popFn<unsigned short>(lua_State* L, void* data) { (*(unsigned short*)data) = (unsigned short)lua_tonumber(L, -1); lua_pop(L, 1); }
+inline void _popFn<unsigned short>(lua_State* L, LuaValue& data) 
+{
+    unsigned short v = (unsigned short)lua_tonumber(L, -1); 
+    data = v;
+    lua_pop(L, 1); 
+}
 template<>
-inline void _popFn<int>(lua_State* L, void* data) { (*(int*)data) = (int)lua_tonumber(L, -1); lua_pop(L, 1); }
+inline void _popFn<int>(lua_State* L, LuaValue& data) 
+{
+    int v = (int)lua_tonumber(L, -1);
+    data = v;
+    lua_pop(L, 1); 
+}
 template<>
-inline void _popFn<unsigned int>(lua_State* L, void* data) { (*(unsigned int*)data) = (unsigned int)lua_tonumber(L, -1); lua_pop(L, 1); }
+inline void _popFn<unsigned int>(lua_State* L, LuaValue& data) 
+{
+    unsigned int v = (unsigned int)lua_tonumber(L, -1); 
+    data = v;
+    lua_pop(L, 1); 
+}
 template<>
-inline void _popFn<long>(lua_State* L, void* data) { (*(long*)data) = (long)lua_tonumber(L, -1); lua_pop(L, 1); }
+inline void _popFn<long>(lua_State* L, LuaValue& data) 
+{
+    long v = (long)lua_tonumber(L, -1); 
+    data = v;
+    lua_pop(L, 1); 
+}
 template<>
-inline void _popFn<unsigned long>(lua_State* L, void* data) { (*(unsigned long*)data) = (unsigned long)lua_tonumber(L, -1); lua_pop(L, 1); }
+inline void _popFn<unsigned long>(lua_State* L, LuaValue& data) 
+{
+    unsigned long v = (unsigned long)lua_tonumber(L, -1); 
+    data = v;
+    lua_pop(L, 1); 
+}
 template<>
-inline void _popFn<long long>(lua_State* L, void* data) { (*(long long*)data) = (long long)lua_tonumber(L, -1); lua_pop(L, 1); }
+inline void _popFn<long long>(lua_State* L, LuaValue& data) 
+{
+    long long v = (long long)lua_tonumber(L, -1); 
+    data = v;
+    lua_pop(L, 1); 
+}
 template<>
-inline void _popFn<unsigned long long>(lua_State* L, void* data) { (*(unsigned long long*)data) = (unsigned long long)lua_tonumber(L, -1); lua_pop(L, 1); }
+inline void _popFn<unsigned long long>(lua_State* L, LuaValue& data) 
+{
+    unsigned long long v = (unsigned long long)lua_tonumber(L, -1);
+    data = v; 
+    lua_pop(L, 1); 
+}
 template<>
-inline void _popFn<float>(lua_State* L, void* data) { (*(float*)data) = (float)lua_tonumber(L, -1); lua_pop(L, 1); }
+inline void _popFn<float>(lua_State* L, LuaValue& data) 
+{
+    float v = (float)lua_tonumber(L, -1); 
+    data = v;
+    lua_pop(L, 1); 
+}
 template<>
-inline void _popFn<double>(lua_State* L, void* data) { (*(double*)data) = (double)lua_tonumber(L, -1); lua_pop(L, 1); }
+inline void _popFn<double>(lua_State* L, LuaValue& data) 
+{
+    double v = (double)lua_tonumber(L, -1);
+    data = v;
+    lua_pop(L, 1); 
+}
 template<>
-inline void _popFn<char*>(lua_State* L, void* data) { (*(char**)data) = (char*)lua_tostring(L, -1); lua_pop(L, 1); }
+inline void _popFn<char*>(lua_State* L, LuaValue& data) 
+{
+    char* v = (char*)lua_tostring(L, -1); 
+    data = v;
+    lua_pop(L, 1); 
+}
 template<>
-inline void _popFn<std::string>(lua_State* L, void* data) { (*(std::string*)data) = std::string(lua_tostring(L, -1), lua_strlen(L, -1)); lua_pop(L, 1); }
+inline void _popFn<std::string>(lua_State* L, LuaValue& data) 
+{
+    data = std::string(lua_tostring(L, -1), lua_strlen(L, -1)); 
+    lua_pop(L, 1); 
+}
 template<>
-inline void _popFn<bool>(lua_State* L, void* data) { (*(bool*)data) = lua_toboolean(L, -1) != 0; lua_pop(L, 1); }
+inline void _popFn<bool>(lua_State* L, LuaValue& data) 
+{
+    bool v = lua_toboolean(L, -1) != 0;
+    data = v;
+    lua_pop(L, 1); 
+}
+
+template<typename T>
+static int _userDataGC(lua_State* L)
+{
+    T** data = (T**)lua_touserdata(L, 1);
+    if(*data != 0)
+        delete *data;
+    return 0;
+}
+
+template<typename T>
+inline void _pushDeleterFn(lua_State* L)
+{
+    lua_pushcfunction(L, _userDataGC<T>);
+    lua_setfield(L, -2, "__gc");
+}
 
 struct LuaType
 {    
@@ -126,13 +237,24 @@ struct LuaType
     LuaType()
     : _typeIndex(0),
       _push(0),
-      _pop(0)
+      _pop(0),
+      _pushDeleter(0)
     {}
+    
     template<typename T>
     LuaType(T* dummy)
-    : _typeIndex(LuaTypeIndex<T>()),
-      _push(&_pushFn<T>),
-      _pop(&_popFn<T>)
+    : _typeIndex(LuaTypeIndex<bare_type<T>::type>()),
+      _push(&_pushFn<bare_type<T>::type>),
+      _pop(&_popFn<bare_type<T>::type>),
+      _pushDeleter(_pushDeleterFn<bare_type<T>::type>)
+    {}
+    
+    template<typename T>
+    LuaType(T** dummy)
+    : _typeIndex(LuaTypeIndex<bare_type<T>::type>()),
+      _push(&_pushFn<bare_type<T>::type>),
+      _pop(&_popFn<bare_type<T>::type>),
+      _pushDeleter(0)
     {}
     
     int _typeIndex;
@@ -142,7 +264,7 @@ struct LuaType
     template<typename T>
     static LuaType& Get()
     {
-        static LuaType type = LuaType((T*)0);
+        static LuaType type = LuaType((bare_type<T>::type*)0);
         return type;
     }
     
@@ -169,12 +291,6 @@ struct LuaType
         functions.push_back(func);
     }
     
-    template<typename Class, typename Ret, typename... Args>
-    LuaType& Function(Ret (Class::*fn)(Args... args), const std::string& name)
-    {
-        return *this;
-    }
-    
     void LuaPush(lua_State* L, void* data) const
     {
         if(!_push)
@@ -183,54 +299,58 @@ struct LuaType
             return;
         }
         
-        if(members.empty())
+        _push(L, data);
+        
+        lua_createtable(L, 0, 0);
+        
+        lua_createtable(L, 0, 0);
+        /*
+        for(unsigned i = 0; i < members.size(); ++i)
         {
-            _push(L, data);
+            members[i].type->LuaPush(L, (void*)((char*)data + (int)members[i].offset));
+            lua_setfield(L, -2, members[i].name.c_str());
         }
-        else
+        */
+        for(unsigned i = 0; i < functions.size(); ++i)
         {
-            lua_createtable(L, 0, 0);
-            lua_pushlightuserdata(L, data);
-            lua_setfield(L, -2, "this");
-            
-            for(unsigned i = 0; i < members.size(); ++i)
-            {
-                members[i].type->LuaPush(L, (void*)((char*)data + (int)members[i].offset));
-                lua_setfield(L, -2, members[i].name.c_str());
-            }
-            
-            for(unsigned i = 0; i < functions.size(); ++i)
-            {
-                lua_pushnumber(L, functions[i].fnIndex);
-                lua_pushlightuserdata(L, functions[i].statePtr);
-                lua_pushcclosure(L, functions[i].cfn, 2);
-                lua_setfield(L, -2, functions[i].name.c_str());
-            }
+            lua_pushnumber(L, functions[i].fnIndex);
+            lua_pushlightuserdata(L, functions[i].statePtr);
+            lua_pushcclosure(L, functions[i].cfn, 2);
+            lua_setfield(L, -2, functions[i].name.c_str());
         }
+        
+        lua_setfield(L, -2, "__index");
+        
+        _pushDeleter(L);
+        
+        lua_setmetatable(L, -2);
     }
     
-    void LuaPop(lua_State* L, void* data)
+    void LuaPop(lua_State* L, LuaValue& data)
     {
         if(!_pop)
             return;
         
-        if(members.empty())
+        _pop(L, data);
+        /*
+        if(!members.empty())
         {
-            _pop(L, data);
+            lua_getmetatable(L, -1);
+            lua_pushstring(L, "__index");
+            lua_gettable(L, -2);
         }
-        else
+        
+        for(unsigned i = 0; i < members.size(); ++i)
         {
-            for(unsigned i = 0; i < members.size(); ++i)
-            {
-                lua_pushstring(L, members[i].name.c_str());
-                lua_gettable(L, -2);
-                members[i].type->LuaPop(L, (void*)((char*)data + (int)members[i].offset));
-            }
-        }
+            lua_pushstring(L, members[i].name.c_str());
+            lua_gettable(L, -2);
+            members[i].type->LuaPop(L, (void*)((char*)data + (int)members[i].offset));
+        }*/
     }
 private:
     void (*_push)(lua_State*, void*);
-    void (*_pop)(lua_State*, void*);
+    void (*_pop)(lua_State*, LuaValue&);
+    void (*_pushDeleter)(lua_State*);
 };
 
 }

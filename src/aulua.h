@@ -7,7 +7,6 @@
 #include <map>
 
 #include "auluafunc.h"
-#include "auluaval.h"
 
 namespace Au{
 
@@ -43,6 +42,9 @@ public:
     void DoFile(const std::string& filename)
     {
         luaL_dofile(L, filename.c_str());
+        const char* err = lua_tostring(L, -1);
+        if(err)
+            std::cout << err << std::endl;
     }
     
     // Type shenanigans ==================
@@ -52,8 +54,8 @@ public:
     { return LuaType::Get<T>(); }
     
     //====================================
-    
-    void SetGlobal(const LuaVal& value, const std::string& name)
+    /*
+    void SetGlobal(const LuaValue& value, const std::string& name)
     {
         value.LuaPush(L);
         lua_setglobal(L, name.c_str());
@@ -62,12 +64,12 @@ public:
     template<typename T>
     T GetGlobal(const std::string& name)
     {
-        LuaVal val = T();
+        LuaValue val = T();
         lua_getglobal(L, name.c_str());
         val.LuaPop(L);
         return val.Get<T>();
     }
-    
+    */
     LuaFunc& GetFunction(unsigned id)
     { return _funcs[id]; }
     template<typename Ret, typename... Args>
@@ -82,15 +84,19 @@ public:
     void Bind(Type Class::* member, const std::string& name)
     {
         LuaType* t = LuaType::GetPtr<Class>();
+        LuaType* tptr = LuaType::GetPtr<Class*>();
         t->Member(member, name);
+        tptr->Member(member, name);
     }
     
     template<typename Class, typename Ret, typename... Args>
     void Bind(Ret (Class::*fn)(Args... args), const std::string& name)
     {
         LuaType* t = LuaType::GetPtr<Class>();
+        LuaType* tptr = LuaType::GetPtr<Class*>();
         LuaFunc func = LuaFunc(fn);
         t->Function(LuaType::MemberFunc(name, this, _funcs.size(), &_luaProc));
+        tptr->Function(LuaType::MemberFunc(name, this, _funcs.size(), &_luaProc));
         _funcs.push_back(func);
     }
     
