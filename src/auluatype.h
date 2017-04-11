@@ -291,7 +291,7 @@ struct LuaType
         functions.push_back(func);
     }
     
-    void LuaPush(lua_State* L, void* data) const
+    void LuaPush(lua_State* L, void* data)
     {
         if(!_push)
         {
@@ -307,8 +307,7 @@ struct LuaType
         /*
         for(unsigned i = 0; i < members.size(); ++i)
         {
-            members[i].type->LuaPush(L, (void*)((char*)data + (int)members[i].offset));
-            lua_setfield(L, -2, members[i].name.c_str());
+            _luaPushMember(L, data, members[i]);            
         }
         */
         for(unsigned i = 0; i < functions.size(); ++i)
@@ -324,6 +323,12 @@ struct LuaType
         if(_pushDeleter) _pushDeleter(L);
         
         lua_setmetatable(L, -2);
+    }
+    
+    void _luaPushMember(lua_State* L, void* data, MemberField& m)
+    {
+        m.type->LuaPush(L, (void*)((char*)data + (int)m.offset));
+        lua_setfield(L, -2, m.name.c_str());
     }
     
     void LuaPop(lua_State* L, LuaValue& data)
