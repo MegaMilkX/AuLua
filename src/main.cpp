@@ -11,18 +11,22 @@ public:
     { std::cout << "Beepin'" << std::endl; }
     void Bop() 
     { std::cout << "Boppin'" << std::endl; }
+    void SetMsg(const std::string& str)
+    {
+        msg = str;
+    }
     
     int boob = 420;
     int poop;
-    std::string msg;
+    std::string msg = "ASDASD";
     
     char a[400];
 };
 
 Object object;
-Object GetObject()
+Object* GetObject()
 {
-    return object;
+    return &object;
 }
 
 void PrintObject(Object* o)
@@ -58,6 +62,7 @@ int main()
     lua.Bind(&Object::msg, "msg");
     lua.Bind(&Object::Beep, "Beep");
     lua.Bind(&Object::Bop, "Bop");
+    lua.Bind(&Object::SetMsg, "SetMsg");
     
     lua.Bind(&Nothing, "Nothing");
     
